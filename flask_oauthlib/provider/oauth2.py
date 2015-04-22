@@ -390,25 +390,25 @@ class OAuth2Provider(object):
             ret = server.create_authorization_response(
                 uri, http_method, body, headers, scopes, credentials)
             log.debug('Authorization successful.')
-            if credentials.get('state') == 'json':
-                log.debug('Request made with JSON, return JSON as well')
+            # if credentials.get('state') == 'json':
+            #     log.debug('Request made with JSON, return JSON as well')
 
-                """
-                Since we are using the Location return here, we need to grab
-                the results and then deserialize it from URL format to JSON
-                format. We do this because we are returning JSON.
-                """
-                json_document = {}
+            #     """
+            #     Since we are using the Location return here, we need to grab
+            #     the results and then deserialize it from URL format to JSON
+            #     format. We do this because we are returning JSON.
+            #     """
+            #     json_document = {}
 
-                serialized_data = ret[0].get('Location').replace(redirect_uri + '#', '').split('&')
+            #     serialized_data = ret[0].get('Location').replace(redirect_uri + '#', '').split('&')
 
-                for element in serialized_data:
-                    new_object = element.split('=')
-                    json_document[new_object[0]] = new_object[1]
+            #     for element in serialized_data:
+            #         new_object = element.split('=')
+            #         json_document[new_object[0]] = new_object[1]
 
-                return jsonify(json_document), 200
-            else:
-                return create_response(*ret)
+            #     return jsonify(json_document), 200
+            # else:
+            return create_response(*ret)
         except oauth2.FatalClientError as e:
             return redirect(e.in_uri(self.error_uri))
         except oauth2.OAuth2Error as e:
