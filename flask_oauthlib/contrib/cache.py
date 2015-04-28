@@ -20,7 +20,6 @@ class Cache(object):
             raise RuntimeError(
                 '`%s` is not a valid cache type!' % cache_type
             )
-        app.extensions[config_prefix.lower() + '_cache'] = self.cache
 
     def __getattr__(self, key):
         try:

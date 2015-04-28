@@ -16,7 +16,7 @@ from flask import make_response, abort
 from oauthlib.oauth1 import RequestValidator
 from oauthlib.oauth1 import WebApplicationServer as Server
 from oauthlib.oauth1 import SIGNATURE_HMAC, SIGNATURE_RSA
-from oauthlib.common import to_unicode, add_params_to_uri, urlencode
+from oauthlib.common import to_unicode, add_params_to_uri
 from oauthlib.oauth1.rfc5849 import errors
 from ..utils import extract_params, create_response
 
@@ -49,8 +49,8 @@ class OAuth1Provider(object):
 
         @app.route('/api/user')
         @oauth.require_oauth('email', 'username')
-        def user():
-            return jsonify(request.oauth.user)
+        def user(oauth):
+            return jsonify(oauth.user)
     """
 
     def __init__(self, app=None):
@@ -491,29 +491,20 @@ class OAuth1Provider(object):
                 for func in self._before_request_funcs:
                     func()
 
-                if hasattr(request, 'oauth') and request.oauth:
-                    return f(*args, **kwargs)
-
                 server = self.server
                 uri, http_method, body, headers = extract_params()
-                try:
-                    valid, req = server.validate_protected_resource_request(
-                        uri, http_method, body, headers, realms
-                    )
-                except Exception as e:
-                    log.warn('Exception: %r', e)
-                    e.urlencoded = urlencode([('error', 'unknown')])
-                    e.status_code = 400
-                    return _error_response(e)
+                valid, req = server.validate_protected_resource_request(
+                    uri, http_method, body, headers, realms
+                )
+
                 for func in self._after_request_funcs:
                     valid, req = func(valid, req)
 
                 if not valid:
-                    return abort(401)
+                    return abort(403)
                 # alias user for convenience
                 req.user = req.access_token.user
-                request.oauth = req
-                return f(*args, **kwargs)
+                return f(*((req,) + args), **kwargs)
             return decorated
         return wrapper
 

@@ -175,7 +175,7 @@ def bind_sqlalchemy(provider, session, user=None, client=None,
         provider.clientgetter(client_binding.get)
 
     if token:
-        token_binding = TokenBinding(token, session, current_user)
+        token_binding = TokenBinding(token, session)
         provider.tokengetter(token_binding.get)
         provider.tokensetter(token_binding.set)
 
@@ -240,9 +240,6 @@ class TokenBinding(BaseBinding):
     """Object use by SQLAlchemyBinding to register the token
     getter and setter
     """
-    def __init__(self, model, session, current_user=None):
-        self.current_user = current_user
-        super(TokenBinding, self).__init__(model, session)
 
     def get(self, access_token=None, refresh_token=None):
         """returns a Token object with the given access token or refresh token
@@ -263,17 +260,8 @@ class TokenBinding(BaseBinding):
         :param token: token object
         :param request: OAuthlib request object
         """
-        if hasattr(request, 'user') and request.user:
-            user = request.user
-        elif self.current_user:
-            # for implicit token
-            user = self.current_user()
-
-        client = request.client
-
-        tokens = self.query.filter_by(
-            client_id=client.client_id,
-            user_id=user.id).all()
+        tokens = self.query.filter_by(client_id=request.client.client_id,
+                                      user_id=request.user.id).all()
         if tokens:
             for tk in tokens:
                 self.session.delete(tk)
@@ -284,8 +272,8 @@ class TokenBinding(BaseBinding):
 
         tok = self.model(**token)
         tok.expires = expires
-        tok.client_id = client.client_id
-        tok.user_id = user.id
+        tok.client_id = request.client.client_id
+        tok.user_id = request.user.id
 
         self.session.add(tok)
         self.session.commit()
