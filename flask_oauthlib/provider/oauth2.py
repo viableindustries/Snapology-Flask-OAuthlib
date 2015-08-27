@@ -362,7 +362,7 @@ class OAuth2Provider(object):
                     return redirect(e.in_uri(self.error_uri))
 
             if request.method == 'POST':
-                redirect_uri = request.values.get('redirect_uri', None)
+                redirect_uri = request.values.get('redirect_uri', None) or request.json.get('redirect_uri', None)
                 if not f(*args, **kwargs):
                     # denied by user
                     e = oauth2.AccessDeniedError()
@@ -376,10 +376,10 @@ class OAuth2Provider(object):
         scope = request.values.get('scope') or ''
         scopes = scope.split()
         credentials = dict(
-            client_id=request.values.get('client_id'),
-            redirect_uri=request.values.get('redirect_uri', None),
-            response_type=request.values.get('response_type', None),
-            state=request.values.get('state', None)
+            client_id=request.values.get('client_id', None) or request.json.get('client_id', None),
+            redirect_uri=request.values.get('redirect_uri', None) or request.json.get('redirect_uri', None),
+            response_type=request.values.get('response_type', None) or request.json.get('response_type', None),
+            state=request.values.get('state', None) or request.json.get('state', None)
         )
         log.debug('Fetched credentials from request %r.', credentials)
         redirect_uri = credentials.get('redirect_uri')
