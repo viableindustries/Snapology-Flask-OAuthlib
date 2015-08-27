@@ -42,7 +42,7 @@ setup(
     license='BSD',
     install_requires=[
         'Flask',
-        'oauthlib>=0.6.2',
+        'git+git://github.com/CommonsCloud/CommonsCloud-OAuthLib',
         'requests-oauthlib>=0.4.1',
     ],
     tests_require=['nose', 'Flask-SQLAlchemy', 'mock'],
