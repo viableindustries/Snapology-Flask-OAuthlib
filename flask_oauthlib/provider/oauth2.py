@@ -373,7 +373,7 @@ class OAuth2Provider(object):
     def confirm_authorization_request(self):
         """When consumer confirm the authrozation."""
         server = self.server
-        scope = request.values.get('scope') or ''
+        scope = request.values.get('scope') or request.json.get('scope', None)
         scopes = scope.split()
         credentials = dict(
             client_id=request.values.get('client_id', None) or request.json.get('client_id', None),
