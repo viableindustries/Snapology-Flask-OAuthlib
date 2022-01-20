@@ -19,6 +19,8 @@ from oauthlib import oauth2
 from oauthlib.oauth2 import RequestValidator, Server
 from oauthlib.common import to_unicode, add_params_to_uri
 from ..utils import extract_params, decode_base64, create_response
+from flask.json import jsonify
+from urllib.parse import urlparse
 
 __all__ = ('OAuth2Provider', 'OAuth2RequestValidator')
 
@@ -472,7 +474,7 @@ class OAuth2Provider(object):
                 e = oauth2.AccessDeniedError(state=request.values.get('state'))
                 return self._on_exception(e, e.in_uri(redirect_uri))
               
-            return self.confirm_authorization_request()
+            return jsonify(**self.confirm_authorization_request())
         return decorated
 
     def confirm_authorization_request(self):
@@ -495,7 +497,21 @@ class OAuth2Provider(object):
             ret = server.create_authorization_response(
                 uri, http_method, body, headers, scopes, credentials)
             log.debug('Authorization successful.')
-            return create_response(*ret)
+
+            run_ret = create_response(*ret)
+
+            tmp_url = urlparse(ret[0]['Location'])
+            result = tmp_url.params.split("&")
+            tmp_token = result[0][result[0].find('=')+1:len(result[0])]
+            if run_ret.status_code==200:
+                return {
+                    "access_token": tmp_token, 
+                    "expires_in": "3600", 
+                    "scope": "user", 
+                    "state": "json", 
+                    "token_type": "Bearer"
+                }
+            # return create_response(*ret)
         except oauth2.FatalClientError as e:
             log.debug('Fatal client error %r', e, exc_info=True)
             return self._on_exception(e, e.in_uri(self.error_uri))
