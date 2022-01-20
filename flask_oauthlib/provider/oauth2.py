@@ -501,7 +501,7 @@ class OAuth2Provider(object):
             run_ret = create_response(*ret)
 
             tmp_url = urlparse(ret[0]['Location'])
-            result = tmp_url.params.split("&")
+            result = tmp_url.fragment.split("&")
             tmp_token = result[0][result[0].find('=')+1:len(result[0])]
             if run_ret.status_code==200:
                 return {
