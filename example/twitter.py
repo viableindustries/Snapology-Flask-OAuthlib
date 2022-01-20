@@ -19,7 +19,7 @@ twitter = oauth.remote_app(
     base_url='https://api.twitter.com/1.1/',
     request_token_url='https://api.twitter.com/oauth/request_token',
     access_token_url='https://api.twitter.com/oauth/access_token',
-    authorize_url='https://api.twitter.com/oauth/authenticate',
+    authorize_url='https://api.twitter.com/oauth/authorize'
 )
 
 
@@ -59,8 +59,12 @@ def tweet():
     resp = twitter.post('statuses/update.json', data={
         'status': status
     })
+
     if resp.status == 403:
-        flash('Your tweet was too long.')
+        flash("Error: #%d, %s " % (
+            resp.data.get('errors')[0].get('code'),
+            resp.data.get('errors')[0].get('message'))
+        )
     elif resp.status == 401:
         flash('Authorization error with Twitter.')
     else:

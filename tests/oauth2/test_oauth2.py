@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import json
-import base64
 from flask import Flask
 from mock import MagicMock
 from .server import (
@@ -13,8 +12,7 @@ from .server import (
     Token
 )
 from .client import create_client
-from .._base import BaseSuite, clean_url
-from .._base import to_bytes as b
+from .._base import BaseSuite, clean_url, to_base64
 from .._base import to_unicode as u
 
 
@@ -51,11 +49,7 @@ authorize_url = (
 )
 
 
-def _base64(text):
-    return u(base64.b64encode(b(text)))
-
-
-auth_code = _base64('confidential:confidential')
+auth_code = to_base64('confidential:confidential')
 
 
 class TestWebAuth(OAuthSuite):
@@ -69,7 +63,7 @@ class TestWebAuth(OAuthSuite):
 
     def test_oauth_authorize_invalid_url(self):
         rv = self.client.get('/oauth/authorize')
-        assert 'invalid_client_id' in rv.location
+        assert 'Missing+client_id+parameter.' in rv.location
 
     def test_oauth_authorize_valid_url(self):
         rv = self.client.get(authorize_url)
@@ -87,12 +81,21 @@ class TestWebAuth(OAuthSuite):
         assert 'code=' in rv.location
         assert 'state' not in rv.location
 
-        # test state
+        # test state on access denied
+        # According to RFC 6749, state should be preserved on error response if it's present in the client request.
+        # Reference: https://tools.ietf.org/html/rfc6749#section-4.1.2
+        rv = self.client.post(authorize_url + '&state=foo', data=dict(
+            confirm='no'
+        ))
+        assert 'error=access_denied' in rv.location
+        assert 'state=foo' in rv.location
+
+        # test state on success
         rv = self.client.post(authorize_url + '&state=foo', data=dict(
             confirm='yes'
         ))
         assert 'code=' in rv.location
-        assert 'state' in rv.location
+        assert 'state=foo' in rv.location
 
     def test_http_head_oauth_authorize_valid_url(self):
         rv = self.client.head(authorize_url)
@@ -140,21 +143,19 @@ class TestWebAuth(OAuthSuite):
         rv = self.client.get('/method/put')
         assert b'token is expired' in rv.data
 
+    def test_never_expiring_bear_token(self):
+        @self.oauth_client.tokengetter
+        def get_oauth_token():
+            return 'never_expire', ''
+
+        rv = self.client.get('/method/put')
+        assert rv.status_code == 200
+
     def test_get_client(self):
         rv = self.client.post(authorize_url, data={'confirm': 'yes'})
         rv = self.client.get(clean_url(rv.location))
         rv = self.client.get("/client")
         assert b'dev' in rv.data
-
-    def test_invalid_client_id(self):
-        authorize_url = (
-            '/oauth/authorize?response_type=code&client_id=confidential'
-            '&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauthorized'
-            '&scope=email'
-        )
-        rv = self.client.post(authorize_url, data={'confirm': 'yes'})
-        rv = self.client.get(clean_url(rv.location))
-        assert b'Invalid' in rv.data
 
     def test_invalid_response_type(self):
         authorize_url = (
@@ -185,42 +186,6 @@ class TestWebAuthCached(TestWebAuth):
 
 
 class TestWebAuthSQLAlchemy(TestWebAuth):
-
-    def create_oauth_provider(self, app):
-        return sqlalchemy_provider(app)
-
-
-class TestPasswordAuth(OAuthSuite):
-
-    def create_oauth_provider(self, app):
-        return default_provider(app)
-
-    def test_get_access_token(self):
-        url = ('/oauth/token?grant_type=password&state=foo'
-               '&scope=email+address&username=admin&password=admin')
-        rv = self.client.get(url, headers={
-            'Authorization': 'Basic %s' % auth_code,
-        })
-        assert b'access_token' in rv.data
-        assert b'state' in rv.data
-
-    def test_invalid_user_credentials(self):
-        url = ('/oauth/token?grant_type=password&state=foo'
-               '&scope=email+address&username=fake&password=admin')
-        rv = self.client.get(url, headers={
-            'Authorization': 'Basic %s' % auth_code,
-        })
-
-        assert b'Invalid credentials given' in rv.data
-
-
-class TestPasswordAuthCached(TestPasswordAuth):
-
-    def create_oauth_provider(self, app):
-        return cache_provider(app)
-
-
-class TestPasswordAuthSQLAlchemy(TestPasswordAuth):
 
     def create_oauth_provider(self, app):
         return sqlalchemy_provider(app)
@@ -359,7 +324,7 @@ class TestCredentialAuth(OAuthSuite):
         assert b'invalid_client' in rv.data
 
     def test_no_client(self):
-        auth_code = _base64('none:confidential')
+        auth_code = to_base64('none:confidential')
         url = ('/oauth/token?grant_type=client_credentials'
                '&scope=email+address')
         rv = self.client.get(url, headers={
@@ -368,7 +333,7 @@ class TestCredentialAuth(OAuthSuite):
         assert b'invalid_client' in rv.data
 
     def test_wrong_secret_client(self):
-        auth_code = _base64('confidential:wrong')
+        auth_code = to_base64('confidential:wrong')
         url = ('/oauth/token?grant_type=client_credentials'
                '&scope=email+address')
         rv = self.client.get(url, headers={

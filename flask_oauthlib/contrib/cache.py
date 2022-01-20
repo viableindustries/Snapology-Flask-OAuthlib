@@ -1,7 +1,7 @@
 # coding: utf-8
 
-from werkzeug.contrib.cache import NullCache, SimpleCache, FileSystemCache
-from werkzeug.contrib.cache import MemcachedCache, RedisCache
+from cachelib import NullCache, SimpleCache, FileSystemCache
+from cachelib import MemcachedCache, RedisCache
 
 
 class Cache(object):
@@ -20,6 +20,7 @@ class Cache(object):
             raise RuntimeError(
                 '`%s` is not a valid cache type!' % cache_type
             )
+        app.extensions[config_prefix.lower() + '_cache'] = self.cache
 
     def __getattr__(self, key):
         try:

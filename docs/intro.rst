@@ -3,43 +3,21 @@
 Introduction
 ============
 
-Flask-OAuthlib is designed as a replacement for Flask-OAuth. It depends on
-the oauthlib module.
-
+Flask-OAuthlib is designed to be a replacement for Flask-OAuth. It depends on
+oauthlib.
 
 Why
 ---
 
-The original `Flask-OAuth`_ is lack of maintenance, and oauthlib_ is a
-promising replacement for oauth2.
+No, you should not use this library any more. PLEASE SWITCH to Authlib_ instead.
 
-.. _`Flask-OAuth`: http://pythonhosted.org/Flask-OAuth/
-.. _oauthlib: https://github.com/idan/oauthlib
+Find out documentation for:
 
-There are lots of non-standard services that claim themself as oauth providers,
-but the API are always broken. When rewrite a oauth extension for flask,
-I do take them into consideration, Flask-OAuthlib does support those
-non-standard services.
+1. `Flask OAuth Client <https://docs.authlib.org/en/latest/client/flask.html>`_
+2. `Flask OAuth 1.0 Provider <https://docs.authlib.org/en/latest/flask/1/>`_
+3. `Flask OAuth 2.0 Provider <https://docs.authlib.org/en/latest/flask/2/>`_
 
-Flask-OAuthlib also provide the solution for creating an oauth service.
-It does support oauth1 and oauth2 (with Bearer Token) server now.
-
-import this
------------
-
-Flask-OAuthlib was developed with a few :pep:`20` idioms in mind::
-
-    >>> import this
-
-
-#. Beautiful is better than ugly.
-#. Explicit is better than implicit.
-#. Simple is better than complex.
-#. Complex is better than complicated.
-#. Readability counts.
-
-All contributions to Flask-OAuthlib should keep these important rules in mind.
-
+.. _Authlib: https://authlib.org/
 
 License
 -------

@@ -35,6 +35,7 @@ class Client(db.Model):
     _redirect_uris = db.Column(db.Text)
     default_scope = db.Column(db.Text, default='email address')
     disallow_grant_type = db.Column(db.String(20))
+    is_confidential = db.Column(db.Boolean, default=True)
 
     @property
     def user(self):
@@ -312,6 +313,7 @@ class TestCase(unittest.TestCase):
         app.debug = True
         app.secret_key = 'testing'
         app.config.update({
-            'SQLALCHEMY_DATABASE_URI': 'sqlite://'
+            'SQLALCHEMY_DATABASE_URI': 'sqlite://',
+            'SQLALCHEMY_TRACK_MODIFICATIONS': False
         })
         return app

@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import base64
 import os
 import sys
 import tempfile
@@ -31,7 +32,8 @@ class BaseSuite(unittest.TestCase):
             'OAUTH1_PROVIDER_ENFORCE_SSL': False,
             'OAUTH1_PROVIDER_KEY_LENGTH': (3, 30),
             'OAUTH1_PROVIDER_REALMS': ['email', 'address'],
-            'SQLALCHEMY_DATABASE_URI': 'sqlite:///%s' % self.db_file
+            'SQLALCHEMY_DATABASE_URI': 'sqlite:///%s' % self.db_file,
+            'SQLALCHEMY_TRACK_MODIFICATIONS': False
         }
         app.config.update(config)
 
@@ -89,6 +91,10 @@ def to_bytes(text):
     if isinstance(text, string_type):
         text = text.encode('utf-8')
     return text
+
+
+def to_base64(text):
+    return to_unicode(base64.b64encode(to_bytes(text)))
 
 
 def clean_url(location):

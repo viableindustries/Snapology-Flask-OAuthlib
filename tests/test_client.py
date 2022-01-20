@@ -3,6 +3,7 @@ from nose.tools import raises
 from flask_oauthlib.client import encode_request_data
 from flask_oauthlib.client import OAuthRemoteApp, OAuth
 from flask_oauthlib.client import parse_response
+from oauthlib.common import PY3
 
 try:
     import urllib2 as http
@@ -12,7 +13,6 @@ except ImportError:
     http_urlopen = 'urllib.request.urlopen'
 
 from mock import patch
-from .oauth2.client import create_client
 
 
 class Response(object):
@@ -50,7 +50,18 @@ def test_encode_request_data():
 
 def test_app():
     app = Flask(__name__)
-    create_client(app)
+    oauth = OAuth(app)
+    remote = oauth.remote_app(
+        'dev',
+        consumer_key='dev',
+        consumer_secret='dev',
+        request_token_params={'scope': 'email'},
+        base_url='http://127.0.0.1:5000/api/',
+        request_token_url=None,
+        access_token_method='POST',
+        access_token_url='http://127.0.0.1:5000/oauth/token',
+        authorize_url='http://127.0.0.1:5000/oauth/authorize'
+    )
     client = app.extensions['oauthlib.client']
     assert client.dev.name == 'dev'
 
@@ -68,7 +79,7 @@ def test_parse_xml():
 @raises(AttributeError)
 def test_raise_app():
     app = Flask(__name__)
-    app = create_client(app)
+    oauth = OAuth(app)
     client = app.extensions['oauthlib.client']
     assert client.demo.name == 'dev'
 
@@ -174,3 +185,32 @@ class TestOAuthRemoteApp(object):
         resp, content = OAuthRemoteApp.http_request('http://example.com')
         assert resp.code == 404
         assert b'o' in content
+
+    def test_token_types(self):
+        oauth = OAuth()
+        remote = oauth.remote_app('remote',
+                                  consumer_key='remote key',
+                                  consumer_secret='remote secret')
+
+        client_token = {'access_token': 'access token'}
+
+        if not PY3:
+            unicode_token = u'access token'
+            client = remote.make_client(token=unicode_token)
+            assert client.token == client_token
+
+        str_token = 'access token'
+        client = remote.make_client(token=str_token)
+        assert client.token == client_token
+
+        list_token = ['access token']
+        client = remote.make_client(token=list_token)
+        assert client.token == client_token
+
+        tuple_token = ('access token',)
+        client = remote.make_client(token=tuple_token)
+        assert client.token == client_token
+
+        dict_token = {'access_token': 'access token'}
+        client = remote.make_client(token=dict_token)
+        assert client.token == client_token

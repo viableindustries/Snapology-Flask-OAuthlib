@@ -3,6 +3,55 @@ Changelog
 
 Here you can see the full list of changes between each Flask-OAuthlib release.
 
+Version 0.9.6
+-------------
+
+Released on Sept 7, 2020
+
+- Fix dependency conflict with requests-oauthlib
+- Fix imports for Werkzeug
+
+
+Version 0.9.5
+-------------
+
+Released on May 16, 2018
+
+- Fix error handlers
+- Update supported OAuthlib
+- Add support for string type token
+
+
+Version 0.9.4
+-------------
+
+Released on Jun 9, 2017
+
+- Handle HTTP Basic Auth for client's access to token endpoint (#301)
+- Allow having access tokens without expiration date (#311)
+- Log exception traceback. (#281)
+
+
+Version 0.9.3
+-------------
+
+Released on Jun 2, 2016
+
+- Revert the wrong implement of non credential oauth2 require auth
+- Catch all exceptions in OAuth2 providers
+- Bugfix for examples, docs and other things
+
+
+Version 0.9.2
+-------------
+
+Released on Nov 3, 2015
+
+- Bugfix in client parse_response when body is none.
+- Update contrib client by @tonyseek
+- Typo fix for OAuth1 provider
+- Fix OAuth2 provider on non credential clients by @Fleurer
+
 
 Version 0.9.1
 -------------
