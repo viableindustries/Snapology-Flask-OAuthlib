@@ -1,1 +1,2 @@
-
+[submodule "docs/_themes"]
+	path = docs/_themes
